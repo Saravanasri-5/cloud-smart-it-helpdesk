@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "_macros.html" import bars %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="toolbar"><a class="btn btn-outline" href="{{ url_for('admin.export_tickets') }}">&#8681; Export all tickets (CSV)</a></div>
+<div class="grid-2">
+  <section class="card"><h2>Tickets by category</h2>{{ bars(category) }}</section>
+  <section class="card"><h2>Tickets by priority</h2>{{ bars(priority, 'warn') }}</section>
+  <section class="card"><h2>Tickets by status</h2>{{ bars(status, 'green') }}</section>
+  <section class="card"><h2>Monthly ticket count (last 12 months)</h2>{{ bars(monthly, 'purple') }}</section>
+</div>
+<section class="card">
+  <h2>Technician performance</h2>
+  {% if technicians %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Technician</th><th>Assigned</th><th>Open</th><th>In Progress</th><th>Resolved / Closed</th><th>Resolution rate</th><th>Avg. resolution time</th></tr></thead>
+    <tbody>
+    {% for t in technicians %}
+      <tr><td><strong>{{ t.name }}</strong></td><td>{{ t.assigned }}</td><td>{{ t.open }}</td><td>{{ t.in_progress }}</td><td>{{ t.resolved }}</td>
+        <td><div class="bar-track mini"><div class="bar-fill green" style="width: {{ t.rate }}%"></div></div> {{ t.rate }}%</td>
+        <td>{{ (t.avg_hours ~ ' hrs') if t.avg_hours is not none else '—' }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p class="empty">No support staff have been created yet.</p>{% endif %}
+</section>
+{% endblock %}

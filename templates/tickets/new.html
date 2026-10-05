@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field %}
+{% block title %}New Ticket{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h2>Raise a support ticket</h2>
+  <form method="post" enctype="multipart/form-data" class="form" novalidate data-validate>
+    {{ form.hidden_tag() }}
+    {{ field(form.title, placeholder="Short summary of the problem") }}
+    <div class="grid-2">
+      {{ field(form.category) }}
+      {{ field(form.priority) }}
+    </div>
+    {{ field(form.description, rows=7, placeholder="Describe the issue, steps to reproduce and any error messages") }}
+    {{ field(form.attachment, hint="PNG, JPG, JPEG or PDF, maximum 10 MB.", accept=".png,.jpg,.jpeg,.pdf") }}
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Submit ticket</button>
+      <a class="btn btn-outline" href="{{ url_for('tickets.list_tickets') }}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

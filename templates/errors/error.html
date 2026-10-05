@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}{{ self.body() }}{% endblock %}
+{% block auth %}{{ self.body() }}{% endblock %}
+{% block body %}
+<div class="error-box">
+  <div class="error-code">{{ code }}</div>
+  <h2>{{ title }}</h2>
+  <p class="muted">{{ message }}</p>
+  <a class="btn btn-primary" href="{{ url_for('main.index') }}">Back to home</a>
+</div>
+{% endblock %}

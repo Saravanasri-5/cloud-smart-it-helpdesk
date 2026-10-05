@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}Dashboard{% endblock %} &middot; Smart IT Helpdesk</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</head>
+<body class="{{ 'app-shell' if current_user.is_authenticated else 'auth-page' }}">
+{% if current_user.is_authenticated %}
+  {% set ep = request.endpoint or '' %}
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><span class="brand-logo">&#9729;</span><div><strong>Smart IT Helpdesk</strong><small>Cloud Management System</small></div></div>
+    <nav class="nav">
+      <a href="{{ url_for('main.dashboard') }}" class="{{ 'active' if ep == 'main.dashboard' }}">&#9632; Dashboard</a>
+      {% if current_user.role == 'user' %}
+        <a href="{{ url_for('tickets.new_ticket') }}" class="{{ 'active' if ep == 'tickets.new_ticket' }}">&#10010; New Ticket</a>
+        <a href="{{ url_for('tickets.list_tickets') }}" class="{{ 'active' if ep == 'tickets.list_tickets' }}">&#9776; My Tickets</a>
+      {% elif current_user.role == 'staff' %}
+        <a href="{{ url_for('tickets.list_tickets') }}" class="{{ 'active' if ep == 'tickets.list_tickets' }}">&#9776; Assigned Tickets</a>
+      {% else %}
+        <a href="{{ url_for('tickets.list_tickets') }}" class="{{ 'active' if ep == 'tickets.list_tickets' }}">&#9776; All Tickets</a>
+        <a href="{{ url_for('admin.users') }}" class="{{ 'active' if ep.startswith('admin.') and ep != 'admin.report_page' and request.args.get('role') != 'staff' }}">&#9823; Users</a>
+        <a href="{{ url_for('admin.users', role='staff') }}" class="{{ 'active' if ep == 'admin.users' and request.args.get('role') == 'staff' }}">&#9881; Support Staff</a>
+        <a href="{{ url_for('admin.report_page') }}" class="{{ 'active' if ep == 'admin.report_page' }}">&#9638; Reports</a>
+      {% endif %}
+      <a href="{{ url_for('auth.profile') }}" class="{{ 'active' if ep == 'auth.profile' }}">&#9786; My Profile</a>
+    </nav>
+    <form method="post" action="{{ url_for('auth.logout') }}" class="logout-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-outline btn-block">Sign out</button>
+    </form>
+  </aside>
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn" id="menu-toggle" aria-label="Toggle menu" type="button">&#9776;</button>
+      <h1 class="page-title">{{ self.title() }}</h1>
+      <div class="user-chip">
+        <span class="avatar">{{ current_user.name[:1]|upper }}</span>
+        <div><strong>{{ current_user.name }}</strong><small>{{ current_user.role_label }}</small></div>
+      </div>
+    </header>
+    <main class="content">{% block content %}{% endblock %}</main>
+    <footer class="footer">&copy; Cloud-Based Smart IT Helpdesk Management System</footer>
+  </div>
+{% else %}
+  <main class="auth-wrap">{% block auth %}{% endblock %}</main>
+{% endif %}
+
+{% with msgs = get_flashed_messages(with_categories=true) %}
+<div id="flash-data" data-messages='{{ msgs|tojson }}' hidden></div>
+{% endwith %}
+<div id="toast-container" class="toast-container" aria-live="polite"></div>
+<div id="loader" class="loader hidden"><div class="spinner"></div></div>
+<div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <h3>Please confirm</h3>
+    <p id="confirm-text">Are you sure?</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-outline" id="confirm-cancel">Cancel</button>
+      <button type="button" class="btn btn-danger" id="confirm-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

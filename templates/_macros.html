@@ -1,0 +1,44 @@
+{% macro badge(value) -%}
+<span class="badge b-{{ value|lower|replace(' ', '-') }}">{{ value }}</span>
+{%- endmacro %}
+
+{% macro field(f, hint=None) -%}
+<div class="form-group{% if f.errors %} has-error{% endif %}">
+  {{ f.label(class_="form-label") }}
+  {{ f(class_="form-control", **kwargs) }}
+  {% if hint %}<small class="hint">{{ hint }}</small>{% endif %}
+  {% for e in f.errors %}<small class="error-text">{{ e }}</small>{% endfor %}
+</div>
+{%- endmacro %}
+
+{% macro stat(label, value, tone='blue', icon='', href=None) -%}
+<{{ 'a' if href else 'div' }} class="stat-card tone-{{ tone }}"{% if href %} href="{{ href }}"{% endif %}>
+  <div class="stat-icon">{{ icon }}</div>
+  <div><div class="stat-value">{{ value }}</div><div class="stat-label">{{ label }}</div></div>
+</{{ 'a' if href else 'div' }}>
+{%- endmacro %}
+
+{% macro bars(items, tone='') -%}
+{% set mx = (items|map(attribute=1)|max) or 1 %}
+{% for label, count in items %}
+<div class="bar-row">
+  <span class="bar-label">{{ label }}</span>
+  <div class="bar-track"><div class="bar-fill {{ tone }}" style="width: {{ (count / mx * 100)|round(1) }}%"></div></div>
+  <span class="bar-value">{{ count }}</span>
+</div>
+{% endfor %}
+{%- endmacro %}
+
+{% macro pager(p, endpoint, qargs) -%}
+{% if p.pages > 1 %}
+<nav class="pager" aria-label="Pagination">
+  {% if p.has_prev %}<a href="{{ url_for(endpoint, page=p.prev_num, **qargs) }}">&laquo; Prev</a>{% endif %}
+  {% for n in p.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+    {% if n %}<a class="{{ 'active' if n == p.page else '' }}" href="{{ url_for(endpoint, page=n, **qargs) }}">{{ n }}</a>
+    {% else %}<span class="gap">&hellip;</span>{% endif %}
+  {% endfor %}
+  {% if p.has_next %}<a href="{{ url_for(endpoint, page=p.next_num, **qargs) }}">Next &raquo;</a>{% endif %}
+</nav>
+<p class="muted center small">Showing page {{ p.page }} of {{ p.pages }} &middot; {{ p.total }} records</p>
+{% endif %}
+{%- endmacro %}

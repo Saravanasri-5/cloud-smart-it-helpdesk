@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, field %}
+{% block title %}{{ ticket.ticket_no }}{% endblock %}
+{% block content %}
+<div class="detail-head">
+  <div>
+    <h2>{{ ticket.title }}</h2>
+    <p class="muted">{{ ticket.ticket_no }} &middot; opened {{ ticket.created_at|dt }} by {{ ticket.creator.name }}</p>
+  </div>
+  <div class="badges">{{ badge(ticket.priority) }} {{ badge(ticket.status) }}</div>
+</div>
+
+<div class="detail-grid">
+  <div class="stack">
+    <section class="card">
+      <h3>Description</h3>
+      <p class="prewrap">{{ ticket.description }}</p>
+      {% if ticket.resolution %}
+      <h3>Resolution</h3>
+      <div class="alert alert-success prewrap">{{ ticket.resolution }}</div>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h3>Attachments ({{ ticket.attachments|length }})</h3>
+      {% if ticket.attachments %}
+      <div class="attachments">
+        {% for a in ticket.attachments %}
+        <div class="attachment">
+          {% if a.is_image %}<a href="{{ url_for('tickets.download', attachment_id=a.id) }}" target="_blank" rel="noopener"><img src="{{ url_for('tickets.download', attachment_id=a.id) }}" alt="{{ a.original_name }}"></a>
+          {% else %}<div class="file-icon">PDF</div>{% endif %}
+          <div><a href="{{ url_for('tickets.download', attachment_id=a.id, download=1) }}">{{ a.original_name }}</a>
+            <small>{{ a.size|filesize }} &middot; {{ a.uploader.name }}</small></div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}<p class="muted">No files attached.</p>{% endif %}
+      <form method="post" action="{{ url_for('tickets.upload_attachment', ticket_id=ticket.id) }}" enctype="multipart/form-data" class="inline-form" novalidate data-validate>
+        {{ attachment_form.hidden_tag() }}
+        {{ attachment_form.attachment(class_="form-control", accept=".png,.jpg,.jpeg,.pdf") }}
+        <button class="btn btn-outline" type="submit">Upload</button>
+      </form>
+    </section>
+
+    <section class="card" id="comments">
+      <h3>Comments ({{ ticket.comments|length }})</h3>
+      {% for c in ticket.comments %}
+      <div class="comment">
+        <span class="avatar">{{ c.author.name[:1]|upper }}</span>
+        <div class="comment-body">
+          <div class="comment-meta"><strong>{{ c.author.name }}</strong> <span class="role-tag">{{ c.author.role_label }}</span> <small>{{ c.created_at|dt }}</small></div>
+          <p class="prewrap">{{ c.body }}</p>
+        </div>
+      </div>
+      {% else %}<p class="muted">No comments yet.</p>{% endfor %}
+      <form method="post" action="{{ url_for('tickets.add_comment', ticket_id=ticket.id) }}" class="form" novalidate data-validate>
+        {{ comment_form.hidden_tag() }}
+        {{ comment_form.body(class_="form-control", rows=3, placeholder="Write a comment...", maxlength=2000) }}
+        <button class="btn btn-primary" type="submit">Add comment</button>
+      </form>
+    </section>
+  </div>
+
+  <div class="stack">
+    <section class="card">
+      <h3>Details</h3>
+      <dl class="details">
+        <dt>Category</dt><dd>{{ ticket.category }}</dd>
+        <dt>Requester</dt><dd>{{ ticket.creator.name }}<br><small>{{ ticket.creator.email }}</small></dd>
+        <dt>Assigned to</dt><dd>{{ ticket.assignee.name if ticket.assignee else 'Not assigned' }}</dd>
+        <dt>Last updated</dt><dd>{{ ticket.updated_at|dt }}</dd>
+        <dt>Resolved on</dt><dd>{{ ticket.resolved_at|dt }}</dd>
+      </dl>
+    </section>
+
+    {% if can_update %}
+    <section class="card">
+      <h3>Update ticket</h3>
+      <form method="post" action="{{ url_for('tickets.update_status', ticket_id=ticket.id) }}" class="form" novalidate data-validate>
+        {{ status_form.hidden_tag() }}
+        {{ field(status_form.status) }}
+        {{ field(status_form.resolution, rows=4, placeholder="Required when resolving or closing", maxlength=5000) }}
+        <button class="btn btn-primary btn-block" type="submit">Update ticket</button>
+      </form>
+    </section>
+    {% endif %}
+
+    {% if current_user.role == 'admin' %}
+    <section class="card">
+      <h3>Assignment</h3>
+      <form method="post" action="{{ url_for('tickets.assign', ticket_id=ticket.id) }}" class="form">
+        {{ assign_form.hidden_tag() }}
+        {{ assign_form.assignee(class_="form-control") }}
+        <button class="btn btn-primary btn-block" type="submit">Assign</button>
+      </form>
+      <form method="post" action="{{ url_for('tickets.delete', ticket_id=ticket.id) }}" class="form" data-confirm="Permanently delete {{ ticket.ticket_no }} with all comments and attachments?">
+        {{ delete_form.hidden_tag() }}
+        <button class="btn btn-danger btn-block" type="submit">Delete ticket</button>
+      </form>
+    </section>
+    {% endif %}
+
+    <section class="card">
+      <h3>Ticket history</h3>
+      <ul class="timeline">
+        {% for h in ticket.history %}
+        <li><strong>{{ h.action }}</strong>
+          {% if h.old_value or h.new_value %}<span class="muted">{{ h.old_value or '—' }} &rarr; {{ h.new_value or '—' }}</span>{% endif %}
+          <small>{{ h.actor.name }} &middot; {{ h.created_at|dt }}</small></li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+</div>
+{% endblock %}

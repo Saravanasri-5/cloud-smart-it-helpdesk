@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, pager %}
+{% block title %}{{ 'All Tickets' if current_user.role == 'admin' else ('Assigned Tickets' if current_user.role == 'staff' else 'My Tickets') }}{% endblock %}
+{% block content %}
+<section class="card">
+  <form method="get" class="filters" data-loading>
+    <input type="search" name="q" class="form-control" placeholder="Search by ID, title or description" value="{{ filters.get('q', '') }}">
+    <select name="status" class="form-control"><option value="">All statuses</option>
+      {% for s in STATUSES %}<option value="{{ s }}" {{ 'selected' if filters.get('status') == s }}>{{ s }}</option>{% endfor %}</select>
+    <select name="priority" class="form-control"><option value="">All priorities</option>
+      {% for p in PRIORITIES %}<option value="{{ p }}" {{ 'selected' if filters.get('priority') == p }}>{{ p }}</option>{% endfor %}</select>
+    <select name="category" class="form-control"><option value="">All categories</option>
+      {% for c in CATEGORIES %}<option value="{{ c }}" {{ 'selected' if filters.get('category') == c }}>{{ c }}</option>{% endfor %}</select>
+    {% if current_user.role == 'admin' %}
+    <select name="assignee" class="form-control"><option value="">All technicians</option>
+      <option value="unassigned" {{ 'selected' if filters.get('assignee') == 'unassigned' }}>Unassigned</option>
+      {% for s in staff %}<option value="{{ s.id }}" {{ 'selected' if filters.get('assignee') == s.id|string }}>{{ s.name }}</option>{% endfor %}</select>
+    {% endif %}
+    <button class="btn btn-primary" type="submit">Filter</button>
+    <a class="btn btn-outline" href="{{ url_for('tickets.list_tickets') }}">Reset</a>
+    {% if current_user.role == 'user' %}<a class="btn btn-success" href="{{ url_for('tickets.new_ticket') }}">+ New Ticket</a>{% endif %}
+    {% if current_user.role == 'admin' %}<a class="btn btn-outline" href="{{ url_for('admin.export_tickets') }}">Export CSV</a>{% endif %}
+  </form>
+</section>
+
+<section class="card">
+  {% if tickets %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Ticket</th><th>Title</th><th>Category</th><th>Priority</th><th>Status</th>
+      {% if current_user.role != 'user' %}<th>Requester</th>{% endif %}
+      {% if current_user.role != 'staff' %}<th>Assigned to</th>{% endif %}
+      <th>Created</th></tr></thead>
+    <tbody>
+    {% for t in tickets %}
+      <tr>
+        <td><a href="{{ url_for('tickets.detail', ticket_id=t.id) }}"><strong>{{ t.ticket_no }}</strong></a></td>
+        <td class="wrap"><a href="{{ url_for('tickets.detail', ticket_id=t.id) }}">{{ t.title }}</a></td>
+        <td>{{ t.category }}</td><td>{{ badge(t.priority) }}</td><td>{{ badge(t.status) }}</td>
+        {% if current_user.role != 'user' %}<td>{{ t.creator.name }}</td>{% endif %}
+        {% if current_user.role == 'admin' %}
+        <td>
+          <form method="post" action="{{ url_for('tickets.assign', ticket_id=t.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <select name="assignee" class="form-control sm" data-autosubmit aria-label="Assign ticket {{ t.ticket_no }}">
+              <option value="0">— Unassigned —</option>
+              {% for s in staff %}<option value="{{ s.id }}" {{ 'selected' if t.assignee_id == s.id }}>{{ s.name }}</option>{% endfor %}
+            </select>
+          </form>
+        </td>
+        {% elif current_user.role == 'user' %}<td>{{ t.assignee.name if t.assignee else 'Not assigned' }}</td>{% endif %}
+        <td>{{ t.created_at|dt }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {{ pager(pagination, 'tickets.list_tickets', filters) }}
+  {% else %}<p class="empty">No tickets match your criteria.</p>{% endif %}
+</section>
+{% endblock %}

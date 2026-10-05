@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field %}
+{% block title %}{{ 'Edit User' if editing else 'Add User' }}{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h2>{{ 'Edit ' ~ target.name if editing else 'Create a new user' }}</h2>
+  <form method="post" class="form" novalidate data-validate>
+    {{ form.hidden_tag() }}
+    {{ field(form.name) }}
+    {{ field(form.email) }}
+    <div class="grid-2">
+      {% if editing and target.id == current_user.id %}
+        <div class="form-group"><label class="form-label">Role</label><input class="form-control" value="{{ target.role_label }}" disabled></div>
+      {% else %}{{ field(form.role) }}{% endif %}
+      {{ field(form.department) }}
+    </div>
+    {{ field(form.phone) }}
+    {{ field(form.password, hint=('Leave blank to keep the current password.' if editing else 'Minimum 8 characters with letters and numbers.'), autocomplete="new-password") }}
+    {% if not (editing and target.id == current_user.id) %}<label class="check">{{ form.active() }} Account active</label>{% endif %}
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Save user</button>
+      <a class="btn btn-outline" href="{{ url_for('admin.users') }}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

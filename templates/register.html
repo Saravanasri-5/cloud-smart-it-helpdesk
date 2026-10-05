@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field %}
+{% block title %}Register{% endblock %}
+{% block auth %}
+<div class="auth-card">
+  <div class="auth-brand"><span class="brand-logo big">&#9729;</span><h1>Create account</h1><p>Register to submit support tickets</p></div>
+  <form method="post" class="form" novalidate data-validate>
+    {{ form.hidden_tag() }}
+    {{ field(form.name, placeholder="Full name", autocomplete="name") }}
+    {{ field(form.email, placeholder="you@company.com", autocomplete="email") }}
+    <div class="grid-2">
+      {{ field(form.phone, placeholder="Optional") }}
+      {{ field(form.department, placeholder="Optional") }}
+    </div>
+    {{ field(form.password, hint="Minimum 8 characters with letters and numbers.", autocomplete="new-password") }}
+    {{ field(form.confirm, autocomplete="new-password") }}
+    <button class="btn btn-primary btn-block" type="submit">Create account</button>
+  </form>
+  <p class="center muted">Already registered? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
+</div>
+{% endblock %}

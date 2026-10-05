@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, stat, bars %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+{% if current_user.role == 'admin' %}
+  <div class="stats-grid">
+    {{ stat('Total Users', stats.total_users, 'purple', '👥', url_for('admin.users')) }}
+    {{ stat('Total Tickets', stats.total_tickets, 'blue', '🎫', url_for('tickets.list_tickets')) }}
+    {{ stat('Open Tickets', stats.open_tickets, 'orange', '📂', url_for('tickets.list_tickets', status='Open')) }}
+    {{ stat('Resolved Tickets', stats.resolved_tickets, 'green', '✅', url_for('tickets.list_tickets', status='Resolved')) }}
+    {{ stat('Critical Tickets', stats.critical_tickets, 'red', '🔥', url_for('tickets.list_tickets', priority='Critical')) }}
+  </div>
+  {% if stats.unassigned_tickets %}
+  <div class="alert alert-warning">{{ stats.unassigned_tickets }} active ticket(s) are not assigned to any technician.
+    <a href="{{ url_for('tickets.list_tickets', assignee='unassigned') }}">Review unassigned tickets</a></div>
+  {% endif %}
+  <div class="grid-2">
+    <section class="card"><h2>Tickets by status</h2>{{ bars(by_status) }}</section>
+    <section class="card"><h2>Tickets by priority</h2>{{ bars(by_priority, 'warn') }}</section>
+  </div>
+{% elif current_user.role == 'staff' %}
+  <div class="stats-grid">
+    {{ stat('Assigned Tickets', stats.total_tickets, 'blue', '🎫', url_for('tickets.list_tickets')) }}
+    {{ stat('Open', stats.open_tickets, 'orange', '📂', url_for('tickets.list_tickets', status='Open')) }}
+    {{ stat('In Progress', stats.in_progress_tickets, 'purple', '🛠', url_for('tickets.list_tickets', status='In Progress')) }}
+    {{ stat('Resolved / Closed', stats.resolved_tickets, 'green', '✅') }}
+  </div>
+{% else %}
+  <div class="stats-grid">
+    {{ stat('My Tickets', stats.total_tickets, 'blue', '🎫', url_for('tickets.list_tickets')) }}
+    {{ stat('Open', stats.open_tickets, 'orange', '📂', url_for('tickets.list_tickets', status='Open')) }}
+    {{ stat('In Progress', stats.in_progress_tickets, 'purple', '🛠', url_for('tickets.list_tickets', status='In Progress')) }}
+    {{ stat('Resolved / Closed', stats.resolved_tickets, 'green', '✅') }}
+  </div>
+  <p><a class="btn btn-primary" href="{{ url_for('tickets.new_ticket') }}">+ Raise a new ticket</a></p>
+{% endif %}
+
+<section class="card">
+  <div class="card-head"><h2>Recent tickets</h2><a href="{{ url_for('tickets.list_tickets') }}">View all</a></div>
+  {% if recent %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Ticket</th><th>Title</th><th>Category</th><th>Priority</th><th>Status</th><th>Created</th></tr></thead>
+    <tbody>
+    {% for t in recent %}
+      <tr>
+        <td><a href="{{ url_for('tickets.detail', ticket_id=t.id) }}">{{ t.ticket_no }}</a></td>
+        <td>{{ t.title }}</td><td>{{ t.category }}</td>
+        <td>{{ badge(t.priority) }}</td><td>{{ badge(t.status) }}</td><td>{{ t.created_at|dt }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p class="empty">No tickets to show yet.</p>{% endif %}
+</section>
+{% endblock %}
