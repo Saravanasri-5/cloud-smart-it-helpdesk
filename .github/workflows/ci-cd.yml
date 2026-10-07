@@ -29,18 +29,11 @@ jobs:
 
       - name: Validate Python files
         run: |
-          python -m compileall \
-            app.py \
-            config.py \
-            extensions.py \
-            models.py \
-            routes \
-            services.py \
-            utils.py
+          python -m compileall app.py config.py extensions.py models.py routes services.py utils.py
 
       - name: Create deployment package
-         run: |
-           git archive --format=tar.gz --output=release.tgz HEAD
+        run: |
+          git archive --format=tar.gz --output=release.tgz HEAD
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6.3.0
@@ -51,8 +44,7 @@ jobs:
 
       - name: Upload package to S3
         run: |
-          aws s3 cp release.tgz \
-            s3://cloud-smart-it-helpdesk-attachments-2026/deploy/${GITHUB_SHA}.tgz
+          aws s3 cp release.tgz s3://cloud-smart-it-helpdesk-attachments-2026/deploy/${GITHUB_SHA}.tgz
 
       - name: Create deployment parameters
         run: |
