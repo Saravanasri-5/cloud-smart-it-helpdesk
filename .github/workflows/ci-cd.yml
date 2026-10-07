@@ -39,12 +39,8 @@ jobs:
             utils.py
 
       - name: Create deployment package
-        run: |
-          tar \
-            --exclude=".git" \
-            --exclude=".env" \
-            --exclude="static/uploads" \
-            -czf release.tgz .
+         run: |
+           git archive --format=tar.gz --output=release.tgz HEAD
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6.3.0
